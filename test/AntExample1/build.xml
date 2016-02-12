@@ -1,0 +1,90 @@
+<?xml version="1.0" ?> 
+<project name="AntExample1" default="war">
+
+	<property name="tomcat-manager-url" value="http://192.168.152.189:8090/manager/text" />
+	<property name="tomcat-manager-username" value="tomcat" />
+	<property name="tomcat-manager-password" value="tomcat" />
+	<property name="project-name" value="AntExample" />
+	<property name="warpath" value="./dist/${project-name}.war" />
+	<property name="catalina-ant-dir" value="./dist/${project-name}.war" />
+	<property name="appserver.lib" value="./lib" />
+	<property name="appserver.home" value="./lib" />
+
+	<path id="catalina-ant-classpath">
+    	<fileset dir="${appserver.lib}">
+        	   	<include name="catalina-ant.jar"/>
+           		<include name="tomcat-coyote.jar"/>
+           		<include name="tomcat-util.jar"/>
+        </fileset>
+    	<fileset dir="${appserver.home}">
+        	       <include name="tomcat-juli.jar"/>
+    	</fileset>
+	</path>
+
+	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" classpathref="catalina-ant-classpath"/>
+	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" classpathref="catalina-ant-classpath"/>
+	<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="catalina-ant-classpath" />
+	<taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask" classpathref="catalina-ant-classpath"/>
+
+
+
+	<path id="compile.classpath">
+		<fileset dir="WebContent/WEB-INF/lib">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="init">
+		<mkdir dir="build/classes"/>
+		<mkdir dir="dist" />
+	</target>
+	
+	<target name="compile" depends="init" >
+		<javac destdir="build/classes" debug="true" srcdir="src" source="1.7" target="1.7">
+			<classpath refid="compile.classpath"/>
+		</javac>
+	</target>
+	
+	<target name="war" depends="compile">
+		<war destfile="dist/AntExample.war" webxml="WebContent/WEB-INF/web.xml">
+			<fileset dir="WebContent"/>
+			<lib dir="WebContent/WEB-INF/lib"/>
+			<classes dir="build/classes"/>
+		</war>
+	</target>
+	
+	<target name="clean">
+		<delete dir="dist" />
+		<delete dir="build" />
+	</target>
+	<target name="stop" description="stop application in tomcat">
+		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}" />
+	</target>
+
+	<target name="start" description="start application in tomcat">
+		<start url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}" />
+	</target>
+	<target name="undeploy" description="undeploy from tomcat">
+		<undeploy 
+			failonerror="no"
+			url="${tomcat-manager-url}"
+			username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}"
+			path="/${project-name}"
+		/>
+	</target>
+		<target name="deploy" description="deploy to tomcat">
+		<echo>deploying from client</echo>
+		<deploy 
+			url="${tomcat-manager-url}"
+			username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}"
+			path="/${project-name}"
+			war="${warpath}"
+		/>
+	</target>
+	<target name="deploywar" depends="undeploy,deploy" />
+	
+</project>
